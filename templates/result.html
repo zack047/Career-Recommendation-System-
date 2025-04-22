@@ -1,0 +1,207 @@
+<!-- This HTML template is designed to display the results of a career analysis. It includes Bootstrap for styling and Chart.js for visualizing data. The template is structured to show the top recommended careers, a pie chart, and a bar chart. The JavaScript section handles the chart rendering and toggling of additional career paths. -->
+<!-- result.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Career Analysis Results</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .dashboard-card {
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            padding: 20px;
+            background: white;
+        }
+        .chart-container {
+            position: relative;
+            margin: 20px 0;
+            height: 300px;
+        }
+        body {
+            background-color: #f8f9fa;
+            padding-bottom: 40px;
+        }
+        .btn-toggle {
+            border-radius: 25px;
+            padding: 10px 20px;
+            transition: all 0.3s ease;
+        }
+        .probability-item {
+            transition: transform 0.2s;
+        }
+        .probability-item:hover {
+            transform: translateX(10px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="text-center mb-4">Career Path Analysis Dashboard</h1>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Top Recommendations Section -->
+            <div class="col-md-6">
+                <div class="dashboard-card">
+                    <h3>Top 3 Recommended Careers</h3>
+                    <ul class="list-group mt-3">
+                        {% for career, probability in top_three %}
+                            <li class="list-group-item probability-item d-flex justify-content-between align-items-center">
+                                {{ career }}
+                                <span class="badge badge-primary badge-pill">{{ "%.1f"|format(probability) }}%</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                    
+                    <button class="btn btn-primary btn-toggle mt-4" onclick="toggleOtherPaths()">
+                        Show Other Career Paths
+                    </button>
+                    
+                    <div id="otherPaths" style="display: none;">
+                        <h4 class="mt-4">Other Career Paths</h4>
+                        <ul class="list-group mt-3">
+                            {% for career, probability in other_paths %}
+                                <li class="list-group-item probability-item d-flex justify-content-between align-items-center">
+                                    {{ career }}
+                                    <span class="badge badge-secondary badge-pill">{{ "%.1f"|format(probability) }}%</span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="col-md-6">
+                <div class="dashboard-card">
+                    <div class="chart-container">
+                        <canvas id="pieChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="dashboard-card">
+                    <div class="chart-container">
+                        <canvas id="barChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleOtherPaths() {
+            const otherPaths = document.getElementById('otherPaths');
+            const button = document.querySelector('.btn-toggle');
+            
+            if (otherPaths.style.display === 'none') {
+                otherPaths.style.display = 'block';
+                button.textContent = 'Hide Other Career Paths';
+                button.classList.add('btn-secondary');
+                button.classList.remove('btn-primary');
+            } else {
+                otherPaths.style.display = 'none';
+                button.textContent = 'Show Other Career Paths';
+                button.classList.add('btn-primary');
+                button.classList.remove('btn-secondary');
+            }
+        }
+
+        const careers = [
+            {% for career, probability in top_three + other_paths %}
+                "{{ career }}",
+            {% endfor %}
+        ];
+        
+        const probabilities = [
+            {% for career, probability in top_three + other_paths %}
+                {{ probability }},
+            {% endfor %}
+        ];
+
+        // Custom colors for charts
+        const chartColors = [
+            '#4361ee', '#3a0ca3', '#7209b7', '#f72585', '#4cc9f0',
+            '#480ca8', '#3f37c9', '#4895ef', '#560bad', '#b5179e',
+            '#3c096c', '#240046', '#3d348b', '#7678ed', '#f7b801',
+            '#f18701'
+        ];
+
+        // Pie Chart
+        new Chart(document.getElementById('pieChart'), {
+            type: 'pie',
+            data: {
+                labels: careers,
+                datasets: [{
+                    data: probabilities,
+                    backgroundColor: chartColors
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            padding: 15,
+                            usePointStyle: true,
+                            font: { size: 11 }
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Career Distribution',
+                        font: { size: 16, weight: 'bold' }
+                    }
+                }
+            }
+        });
+
+        // Bar Chart
+        new Chart(document.getElementById('barChart'), {
+            type: 'bar',
+            data: {
+                labels: careers,
+                datasets: [{
+                    label: 'Career Probability (%)',
+                    data: probabilities,
+                    backgroundColor: chartColors,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                        text: 'Career Probabilities Comparison',
+                        font: { size: 16, weight: 'bold' }
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        max: 100,
+                        title: {
+                            display: true,
+                            text: 'Probability (%)'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
